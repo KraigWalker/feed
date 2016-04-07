@@ -1,7 +1,12 @@
-const fbsub = require('./lib/fbsub');
+'use strict';
+
+const fbsub = require('./lib/facebooksub.js');
 const express = require('express');
 const bodyParser = require('body-parser');
+const fs = require('fs');
+const passport = require('passport');
 
+const routes = require('./app/routes');
 const app = express();
 
 // Configure app to use bodyParser
@@ -21,21 +26,11 @@ router.get('/', function(req, res) {
     res.json({ message: 'hooray! Welcome to the Feed API!' });
 });
 
-router.post('/subscription/', function(req, res) {
+router.post('/api/subscription/', function(req, res) {
     res.json({ message: 'subscribe to Facebook page' });
 });
 
-router.delete('/subscription/', function(req, res) {
-    res.json({ message: 'subscribe to Facebook page' });
-});
-
-// Facebook
-router.post('/subscription/update/', function(req, res) {
-    res.json({ message: 'subscribe to Facebook page' });
-});
-
-// Facebook
-router.get('/subscription/update/', function(req, res) {
+router.delete('/api/subscription/', function(req, res) {
     res.json({ message: 'subscribe to Facebook page' });
 });
 
@@ -44,6 +39,37 @@ router.get('/subscription/update/', function(req, res) {
 app.use('/api', router);
 
 // START THE SERVER
-// =============================================================================
-app.listen(port);
-console.log(`Feed Aggregator started on Port${port}`);
+// ===================================================
+function startServer() {
+
+
+	app.use(passport.initialize());
+	app.use(passport.session()); // persistent login sessions
+	 require('./config/passport')(passport); // pass passport for configuration
+	
+	////////////////////////
+	// Setup Facebook App //
+	////////////////////////
+	
+	// Read config from config.json
+	try {
+		let obj;
+		fs.readFile('config.json', 'utf8', (err, data) => {
+  		
+  		if (err) {
+  			throw err;
+  		}
+  		obj = JSON.parse(data);
+	});
+
+	} catch (err) {
+		console.log(err);
+	}
+
+	require('./app/routes.js')(app, passport); 
+
+	app.listen(port);
+	console.log(`Feed Aggregator started on Port${port}`);
+}
+
+startServer();
